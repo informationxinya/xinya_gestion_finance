@@ -1,0 +1,7 @@
+本程序基于 github / supabase / vercel
+
+使用的都是 information.xinya@gmail.com 新注册的账号
+
+supabase 数据库的密码是 Xinya@_2026
+
+程序自己的管理员账户为 admin xinya-888
