@@ -48,6 +48,7 @@ export type ChartViewType =
   | 'MONTHLY_DEPT'
   | 'WEEKLY_DEPT'
   | 'WEEKLY_COMPANY'
+  | 'MONTHLY_COMPANY'
   | 'COMPANY_DISTRIBUTION'
   | 'UNPAID_DEPT'
   | 'UNPAID_COMPANY'

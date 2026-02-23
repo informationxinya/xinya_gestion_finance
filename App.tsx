@@ -5,6 +5,7 @@ import {
   getProcessedData,
   getOrderedDepartments,
   getMonthlySummary,
+  getMonthlyCompanySummary,
   getWeeklySummary,
   getCompanyBubbleData,
   getUnpaidSummary,
@@ -23,6 +24,7 @@ import { DatePicker } from './components/ui/DatePicker';
 import { MonthlyPurchaseChart } from './components/charts/MonthlyPurchaseChart';
 import { WeeklyDeptChart } from './components/charts/WeeklyDeptChart';
 import { CompanyWeekChart } from './components/charts/CompanyWeekChart';
+import { CompanyMonthlyChart } from './components/charts/CompanyMonthlyChart';
 import { DistributionChart } from './components/charts/DistributionChart';
 
 import { PaymentCycleBarChart, ForecastChart } from './components/charts/CycleCharts';
@@ -250,6 +252,10 @@ const App: React.FC = () => {
         const companyWeeklyData = getWeeklySummary(filteredForCompany);
         return <CompanyWeekChart key={`weekly-comp-${safeMonthComp}-${selectedDept}`} data={companyWeeklyData} department={selectedDept} />;
 
+      case 'MONTHLY_COMPANY':
+        const monthlyCompData = getMonthlyCompanySummary(data, selectedDept);
+        return <CompanyMonthlyChart key={`monthly-comp-${selectedDept}`} data={monthlyCompData} department={selectedDept} lang={lang} />;
+
       case 'COMPANY_DISTRIBUTION':
         const [distStart, distEnd] = getDistributionRange();
         const { chartData, sortedCompanies } = getCompanyBubbleData(
@@ -461,6 +467,7 @@ const App: React.FC = () => {
                           <button onClick={() => setCurrentView('MONTHLY_DEPT')} className={`text-left px-3 py-2 rounded text-sm transition-all ${currentView === 'MONTHLY_DEPT' ? 'bg-scifi-primary/20 text-scifi-primary border border-scifi-primary/50' : 'hover:bg-scifi-card text-gray-400'}`}>{t.views.monthlyDept}</button>
                           <button onClick={() => setCurrentView('WEEKLY_DEPT')} className={`text-left px-3 py-2 rounded text-sm transition-all ${currentView === 'WEEKLY_DEPT' ? 'bg-scifi-primary/20 text-scifi-primary border border-scifi-primary/50' : 'hover:bg-scifi-card text-gray-400'}`}>{t.views.weeklyDept}</button>
                           <button onClick={() => setCurrentView('WEEKLY_COMPANY')} className={`text-left px-3 py-2 rounded text-sm transition-all ${currentView === 'WEEKLY_COMPANY' ? 'bg-scifi-primary/20 text-scifi-primary border border-scifi-primary/50' : 'hover:bg-scifi-card text-gray-400'}`}>{t.views.weeklyComp}</button>
+                          <button onClick={() => setCurrentView('MONTHLY_COMPANY')} className={`text-left px-3 py-2 rounded text-sm transition-all ${currentView === 'MONTHLY_COMPANY' ? 'bg-scifi-primary/20 text-scifi-primary border border-scifi-primary/50' : 'hover:bg-scifi-card text-gray-400'}`}>{t.views.monthlyCompLine}</button>
                           <button onClick={() => setCurrentView('COMPANY_DISTRIBUTION')} className={`text-left px-3 py-2 rounded text-sm transition-all ${currentView === 'COMPANY_DISTRIBUTION' ? 'bg-scifi-primary/20 text-scifi-primary border border-scifi-primary/50' : 'hover:bg-scifi-card text-gray-400'}`}>{t.views.distrib}</button>
                         </>
                       )}
@@ -506,7 +513,7 @@ const App: React.FC = () => {
                     />
                   )}
 
-                  {['WEEKLY_COMPANY', 'COMPANY_DISTRIBUTION', 'CYCLE_ANALYSIS', 'PAYMENT_COMPANY_WEEKLY', 'PAYMENT_DISTRIBUTION'].includes(currentView) && (
+                  {['WEEKLY_COMPANY', 'MONTHLY_COMPANY', 'COMPANY_DISTRIBUTION', 'CYCLE_ANALYSIS', 'PAYMENT_COMPANY_WEEKLY', 'PAYMENT_DISTRIBUTION'].includes(currentView) && (
                     <Select label={t.control.deptSelect} options={sortedDepartments} value={selectedDept} onChange={(e) => setSelectedDept(e.target.value)} />
                   )}
 
@@ -592,6 +599,7 @@ const App: React.FC = () => {
                   {currentView === 'MONTHLY_DEPT' && <><PieChart className="w-5 h-5 text-scifi-accent" /> {t.headers.strategic}</>}
                   {currentView === 'WEEKLY_DEPT' && <><Activity className="w-5 h-5 text-scifi-accent" /> {t.headers.tactical}</>}
                   {currentView === 'WEEKLY_COMPANY' && <><Database className="w-5 h-5 text-scifi-accent" /> {t.headers.vendor}</>}
+                  {currentView === 'MONTHLY_COMPANY' && <><BarChart2 className="w-5 h-5 text-scifi-accent" /> {t.views.monthlyCompLine}</>}
                   {currentView === 'COMPANY_DISTRIBUTION' && <><DollarSign className="w-5 h-5 text-scifi-accent" /> {t.headers.distrib}</>}
 
                   {currentView === 'UNPAID_DEPT' && <><AlertTriangle className="w-5 h-5 text-scifi-danger" /> {t.headers.unpaidDeptTitle}</>}

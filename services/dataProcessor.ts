@@ -151,6 +151,60 @@ export const getMonthlySummary = (data: PurchaseRecord[]): MonthlySummary[] => {
   return Object.values(grouped).sort((a, b) => a.month.localeCompare(b.month));
 };
 
+export const getMonthlyCompanySummary = (data: PurchaseRecord[], department: string): MonthlySummary[] => {
+  const filtered = data.filter(r => r.department === department);
+
+  // 1. Calculate Company Totals for Top 20 Logic
+  const companyTotals: Record<string, number> = {};
+  filtered.forEach(r => {
+    if (!companyTotals[r.companyName]) companyTotals[r.companyName] = 0;
+    companyTotals[r.companyName] += r.invoiceAmount;
+  });
+
+  const companiesToShow = Object.entries(companyTotals)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 20)
+    .map(([name]) => name);
+
+  // 2. Group by Month and Company
+  const monthlyTotals: Record<string, number> = {};
+  filtered.forEach(r => {
+    const date = parseISO(r.invoiceDate);
+    const monthStr = format(date, 'yyyy-MM');
+    if (!monthlyTotals[monthStr]) monthlyTotals[monthStr] = 0;
+    monthlyTotals[monthStr] += r.invoiceAmount;
+  });
+
+  const grouped = filtered.reduce((acc, record) => {
+    if (!companiesToShow.includes(record.companyName)) return acc;
+
+    const date = parseISO(record.invoiceDate);
+    const monthStr = format(date, 'yyyy-MM');
+
+    if (!acc[monthStr]) {
+      acc[monthStr] = {
+        month: monthStr,
+        totalAmount: 0,
+        records: [],
+        byDepartment: {}, // Repurposing this field for company amounts in the chart
+        totalMonthlyAmount: monthlyTotals[monthStr]
+      };
+    }
+
+    acc[monthStr].totalAmount += record.invoiceAmount;
+    acc[monthStr].records.push(record);
+
+    if (!acc[monthStr].byDepartment[record.companyName]) {
+      acc[monthStr].byDepartment[record.companyName] = 0;
+    }
+    acc[monthStr].byDepartment[record.companyName] += record.invoiceAmount;
+
+    return acc;
+  }, {} as Record<string, MonthlySummary>);
+
+  return Object.values(grouped).sort((a, b) => a.month.localeCompare(b.month));
+};
+
 export const getWeeklySummary = (data: PurchaseRecord[], selectedMonth?: string): WeeklySummary[] => {
   let filtered = data;
   if (selectedMonth) {
