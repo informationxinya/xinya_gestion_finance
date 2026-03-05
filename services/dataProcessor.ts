@@ -1,5 +1,5 @@
 
-import { PurchaseRecord, MonthlySummary, WeeklySummary, CompanyBubbleData, UnpaidSummary, PaymentCycleMetric, PredictedPayment, ForecastSummary } from '../types';
+import { PurchaseRecord, MonthlySummary, WeeklySummary, CompanyBubbleData, UnpaidSummary, PaymentCycleMetric, PredictedPayment, ForecastSummary, PaymentProgressData, PaymentProgressCheckGroup } from '../types';
 import { format, endOfWeek, addDays, differenceInDays } from 'date-fns';
 
 // Helper: Replace missing parseISO
@@ -636,5 +636,60 @@ export const getPaymentForecast = (processedData: PurchaseRecord[], metrics: Pay
     byDept,
     byDeptCompany,
     allRecords: predictions
+  };
+};
+
+// ------------------------------------------------------------------
+// Payment Progress Chart Logic
+// ------------------------------------------------------------------
+export const getPaymentProgressData = (
+  data: PurchaseRecord[],
+  dept: string,
+  companyName: string
+): PaymentProgressData => {
+  // 1. Filter data
+  const filtered = data.filter(r => {
+    // Must have check number
+    if (!r.checkNumber || r.checkNumber.trim() === '') return false;
+    // Dept filter (if provided)
+    if (dept && r.department !== dept) return false;
+    // Company filter (if provided)
+    if (companyName && r.companyName !== companyName) return false;
+    return true;
+  });
+
+  // 2. Group by Company and Check Number
+  const grouped: Record<string, PaymentProgressCheckGroup> = {};
+
+  filtered.forEach(r => {
+    const key = `${r.companyName}-${r.checkNumber}`;
+    if (!grouped[key]) {
+      const checkDate = r.checkDate ? r.checkDate.slice(0, 10) : '';
+      const checkDateMs = checkDate ? parseISO(checkDate).getTime() : 0;
+      grouped[key] = {
+        companyName: r.companyName,
+        checkDate: checkDate,
+        checkDateMs: checkDateMs,
+        checkNumber: r.checkNumber,
+        checkTotalAmount: r.checkTotalAmount || r.actualPaidAmount || 0, // Fallback
+        bankReconciliationDate: r.bankReconciliationDate || '',
+        invoices: []
+      };
+    }
+    grouped[key].invoices.push({
+      invoiceNumber: r.invoiceNumber,
+      invoiceAmount: r.invoiceAmount
+    });
+  });
+
+  const resultList = Object.values(grouped).filter(g => g.checkDateMs > 0);
+
+  // 3. Extract unique companies for Y-axis domain
+  const uniqueCompanies = Array.from(new Set(resultList.map(g => g.companyName)));
+  uniqueCompanies.sort((a, b) => a.localeCompare(b));
+
+  return {
+    chartData: resultList,
+    sortedCompanies: uniqueCompanies
   };
 };

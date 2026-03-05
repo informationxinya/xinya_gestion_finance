@@ -36,6 +36,7 @@ export const translations = {
       paymentWeekly: '📅 部门周度付款趋势',
       paymentCompWeekly: '🏢 公司周度付款状态',
       paymentDistrib: '📊 付款分布气泡图',
+      paymentProgress: '⏳ 各公司付款进度',
     },
     headers: {
       strategic: '战略概览：月度',
@@ -52,6 +53,7 @@ export const translations = {
       paymentWeeklyTitle: '各部门每周实际付款金额',
       paymentCompTitle: '各公司每周付款状态',
       paymentDistribTitle: '公司付款时间间隔与金额分布',
+      paymentProgressTitle: '各公司付款进度一览',
     },
     alerts: {
       upload: '数据传输完成。系统已更新。',
@@ -126,6 +128,7 @@ export const translations = {
       paymentWeekly: '📅 Paiements Hebdo',
       paymentCompWeekly: '🏢 Paiements Hebdo (Soc.)',
       paymentDistrib: '📊 Distribution Paiements',
+      paymentProgress: '⏳ Prog. Paiement par Société',
     },
     headers: {
       strategic: 'Vue Stratégique : Mensuelle',
@@ -142,6 +145,7 @@ export const translations = {
       paymentWeeklyTitle: 'Paiements Réels Hebdomadaires',
       paymentCompTitle: 'Statut Paiement par Société',
       paymentDistribTitle: 'Fréquence et Montants des Paiements',
+      paymentProgressTitle: 'Progression des Paiements par Société',
     },
     alerts: {
       upload: 'Transmission terminée. Système mis à jour.',

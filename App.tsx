@@ -13,7 +13,8 @@ import {
   getPaymentForecast,
   getMonthlyPaidSummary,
   getWeeklyPaidSummary,
-  getPaidCompanyBubbleData
+  getPaidCompanyBubbleData,
+  getPaymentProgressData
 } from './services/dataProcessor';
 import { supabase, mapDbToPurchaseRecord } from './services/supabase';
 import { ChartViewType, PurchaseRecord, Language, CompanyBubbleData } from './types';
@@ -26,6 +27,7 @@ import { WeeklyDeptChart } from './components/charts/WeeklyDeptChart';
 import { CompanyWeekChart } from './components/charts/CompanyWeekChart';
 import { CompanyMonthlyChart } from './components/charts/CompanyMonthlyChart';
 import { DistributionChart } from './components/charts/DistributionChart';
+import { PaymentProgressChart } from './components/charts/PaymentProgressChart';
 
 import { PaymentCycleBarChart, ForecastChart } from './components/charts/CycleCharts';
 import { PaymentIntelligence } from './components/PaymentIntelligence';
@@ -33,6 +35,7 @@ import { ForecastDashboard } from './components/modules/ForecastDashboard';
 import { UnpaidDashboard } from './components/modules/UnpaidDashboard';
 import { PaymentDetailTable } from './components/modules/PaymentDetailTable';
 import { AdminUpload } from './components/AdminUpload';
+import { SearchableSelect } from './components/ui/SearchableSelect';
 import { format } from 'date-fns';
 import { translations } from './services/translations';
 
@@ -59,6 +62,7 @@ const App: React.FC = () => {
   const [endDate, setEndDate] = useState<string>('');
   const [selectedBubbleCompanies, setSelectedBubbleCompanies] = useState<string[]>([]); // Empty = All
   const [selectedBubble, setSelectedBubble] = useState<CompanyBubbleData | null>(null); // For drill-down
+  const [selectedProgressCompany, setSelectedProgressCompany] = useState<string>(''); // For Payment Progress filter
 
   const t = translations[lang];
 
@@ -151,6 +155,10 @@ const App: React.FC = () => {
   // Derived Data
   const sortedDepartments = useMemo(() => getOrderedDepartments(data).departments, [data]);
   const availableMonths = useMemo(() => Array.from(new Set(data.map(r => r.invoiceDate.slice(0, 7)))).sort(), [data]);
+
+  const allCompanyNames = useMemo(() => {
+    return Array.from(new Set(processedData.map(r => r.companyName))).sort((a: string, b: string) => a.localeCompare(b));
+  }, [processedData]);
 
   // Initialize Multi-Select with all departments when data loads
   useEffect(() => {
@@ -340,6 +348,10 @@ const App: React.FC = () => {
           </div>
         );
 
+      case 'PAYMENT_PROGRESS':
+        const progressData = getPaymentProgressData(processedData, selectedDept, selectedProgressCompany);
+        return <PaymentProgressChart key={`payment-prog-${selectedDept}-${selectedProgressCompany}`} data={progressData} lang={lang} />;
+
       default:
         return null;
     }
@@ -489,6 +501,7 @@ const App: React.FC = () => {
                           <button onClick={() => setCurrentView('PAYMENT_WEEKLY')} className={`text-left px-3 py-2 rounded text-sm transition-all ${currentView === 'PAYMENT_WEEKLY' ? 'bg-scifi-success/20 text-scifi-success border border-scifi-success/50' : 'hover:bg-scifi-card text-gray-400'}`}>{t.views.paymentWeekly}</button>
                           <button onClick={() => setCurrentView('PAYMENT_COMPANY_WEEKLY')} className={`text-left px-3 py-2 rounded text-sm transition-all ${currentView === 'PAYMENT_COMPANY_WEEKLY' ? 'bg-scifi-success/20 text-scifi-success border border-scifi-success/50' : 'hover:bg-scifi-card text-gray-400'}`}>{t.views.paymentCompWeekly}</button>
                           <button onClick={() => setCurrentView('PAYMENT_DISTRIBUTION')} className={`text-left px-3 py-2 rounded text-sm transition-all ${currentView === 'PAYMENT_DISTRIBUTION' ? 'bg-scifi-success/20 text-scifi-success border border-scifi-success/50' : 'hover:bg-scifi-card text-gray-400'}`}>{t.views.paymentDistrib}</button>
+                          <button onClick={() => setCurrentView('PAYMENT_PROGRESS')} className={`text-left px-3 py-2 rounded text-sm transition-all ${currentView === 'PAYMENT_PROGRESS' ? 'bg-scifi-success/20 text-scifi-success border border-scifi-success/50' : 'hover:bg-scifi-card text-gray-400'}`}>{t.views.paymentProgress}</button>
                         </>
                       )}
                     </div>
@@ -513,8 +526,18 @@ const App: React.FC = () => {
                     />
                   )}
 
-                  {['WEEKLY_COMPANY', 'MONTHLY_COMPANY', 'COMPANY_DISTRIBUTION', 'CYCLE_ANALYSIS', 'PAYMENT_COMPANY_WEEKLY', 'PAYMENT_DISTRIBUTION'].includes(currentView) && (
+                  {['WEEKLY_COMPANY', 'MONTHLY_COMPANY', 'COMPANY_DISTRIBUTION', 'CYCLE_ANALYSIS', 'PAYMENT_COMPANY_WEEKLY', 'PAYMENT_DISTRIBUTION', 'PAYMENT_PROGRESS'].includes(currentView) && (
                     <Select label={t.control.deptSelect} options={sortedDepartments} value={selectedDept} onChange={(e) => setSelectedDept(e.target.value)} />
+                  )}
+
+                  {currentView === 'PAYMENT_PROGRESS' && (
+                    <SearchableSelect
+                      label={t.table.searchCompany}
+                      options={allCompanyNames}
+                      value={selectedProgressCompany}
+                      onChange={setSelectedProgressCompany}
+                      placeholder={t.table.searchCompany}
+                    />
                   )}
 
                   {/* UNPAID COMPANY Specific - REMOVED (Handled by UnpaidDashboard) */}
@@ -612,6 +635,7 @@ const App: React.FC = () => {
                   {currentView === 'PAYMENT_WEEKLY' && <><Activity className="w-5 h-5 text-scifi-success" /> {t.headers.paymentWeeklyTitle}</>}
                   {currentView === 'PAYMENT_COMPANY_WEEKLY' && <><Database className="w-5 h-5 text-scifi-success" /> {t.headers.paymentCompTitle}</>}
                   {currentView === 'PAYMENT_DISTRIBUTION' && <><TrendingDown className="w-5 h-5 text-scifi-success" /> {t.headers.paymentDistribTitle}</>}
+                  {currentView === 'PAYMENT_PROGRESS' && <><Activity className="w-5 h-5 text-scifi-success" /> {t.headers.paymentProgressTitle}</>}
                 </h2>
               </div>
 

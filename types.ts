@@ -57,7 +57,8 @@ export type ChartViewType =
   | 'PAYMENT_MONTHLY'
   | 'PAYMENT_WEEKLY'
   | 'PAYMENT_COMPANY_WEEKLY'
-  | 'PAYMENT_DISTRIBUTION';
+  | 'PAYMENT_DISTRIBUTION'
+  | 'PAYMENT_PROGRESS';
 
 export interface CompanyBubbleData {
   companyName: string;
@@ -66,6 +67,24 @@ export interface CompanyBubbleData {
   amount: number; // Size/Z-axis
   totalCompanyAmount: number; // For sorting Y-axis
   invoiceCount?: number; // Number of invoices in this group
+}
+
+export interface PaymentProgressData {
+  chartData: PaymentProgressCheckGroup[];
+  sortedCompanies: string[]; // For Y-axis domain
+}
+
+export interface PaymentProgressCheckGroup {
+  companyName: string; // Y-axis
+  checkDate: string; // X-axis (YYYY-MM-DD)
+  checkDateMs: number; // X-axis numeric value for Recharts
+  checkNumber: string;
+  checkTotalAmount: number;
+  bankReconciliationDate: string;
+  invoices: {
+    invoiceNumber: string;
+    invoiceAmount: number;
+  }[];
 }
 
 export interface UnpaidSummary {
