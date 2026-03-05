@@ -20,31 +20,18 @@ interface PaymentProgressChartProps {
     lang: Language;
 }
 
-// Minimal hover tooltip
-const MinimalTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-        const data = payload[0].payload;
-        return (
-            <div className="bg-[#0f172a]/95 border border-scifi-border p-3 rounded-lg shadow-xl backdrop-blur text-sm z-50">
-                <p className="font-bold text-white mb-1">{data.companyName}</p>
-                <p className="text-gray-300">支票总额: <span className="text-scifi-success font-mono">${Number(data.checkTotalAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
-                <p className="text-xs text-scifi-primary mt-1">👆 点击查看明细与发票列表</p>
-            </div>
-        );
-    }
-    return null;
-};
-
-// Interactive Click Popup
-const DetailPopup = ({ data, onClose }: { data: any, onClose: () => void }) => {
+// Shared Popup Content
+const PopupContent = ({ data, onClose, isHover = false }: { data: any, onClose?: () => void, isHover?: boolean }) => {
     return (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#0f172a]/95 border border-scifi-border p-5 rounded-lg shadow-2xl backdrop-blur-md w-full max-w-sm z-50 animate-in fade-in zoom-in duration-200">
-            <button
-                onClick={onClose}
-                className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-1 rounded-full cursor-pointer"
-            >
-                <X className="w-5 h-5" />
-            </button>
+        <>
+            {!isHover && onClose && (
+                <button
+                    onClick={onClose}
+                    className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-1 rounded-full cursor-pointer z-10"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+            )}
             <h4 className="font-bold text-white mb-3 pb-2 border-b border-white/10 pr-6">{data.companyName}</h4>
 
             <div className="space-y-1.5 text-sm">
@@ -71,9 +58,12 @@ const DetailPopup = ({ data, onClose }: { data: any, onClose: () => void }) => {
             </div>
 
             <div className="mt-4 pt-3 border-t border-white/10">
-                <p className="text-sm text-scifi-primary mb-2 font-semibold">包含的发票明细 ({data.invoices.length}张):</p>
+                <p className="text-sm text-scifi-primary flex justify-between items-center mb-2 font-semibold">
+                    <span>发票明细 ({data.invoices.length}张)</span>
+                    {isHover && <span className="text-xs font-normal text-gray-500 animate-pulse">👆 点击卡片滑动查看</span>}
+                </p>
                 {/* Ensure pointer-events-auto so scrolling works within the absolute overlay */}
-                <div className="max-h-40 overflow-y-auto space-y-1 pr-2 custom-scrollbar pointer-events-auto">
+                <div className={`max-h-40 overflow-y-auto space-y-1 pr-2 custom-scrollbar ${!isHover ? 'pointer-events-auto' : 'pointer-events-none'}`}>
                     {data.invoices.map((inv: any, idx: number) => (
                         <div key={idx} className="flex justify-between text-xs p-1.5 hover:bg-white/5 rounded transition-colors">
                             <span className="text-gray-400">{inv.invoiceNumber}</span>
@@ -82,6 +72,28 @@ const DetailPopup = ({ data, onClose }: { data: any, onClose: () => void }) => {
                     ))}
                 </div>
             </div>
+        </>
+    );
+};
+
+// Hover Tooltip (Full detail)
+const HoverTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+        const data = payload[0].payload;
+        return (
+            <div className="bg-[#0f172a]/95 border border-scifi-border p-5 rounded-lg shadow-2xl backdrop-blur-md w-[350px] z-50">
+                <PopupContent data={data} isHover={true} />
+            </div>
+        );
+    }
+    return null;
+};
+
+// Interactive Click Popup
+const DetailPopup = ({ data, onClose }: { data: any, onClose: () => void }) => {
+    return (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#0f172a]/95 border border-scifi-border p-5 rounded-lg shadow-2xl backdrop-blur-md w-full max-w-sm z-50 animate-in fade-in zoom-in duration-200">
+            <PopupContent data={data} onClose={onClose} isHover={false} />
         </div>
     );
 };
@@ -170,7 +182,7 @@ export const PaymentProgressChart: React.FC<PaymentProgressChartProps> = ({ data
                     />
                     <ZAxis type="number" dataKey="checkTotalAmount" range={[60, 400]} />
                     <Tooltip
-                        content={<MinimalTooltip />}
+                        content={<HoverTooltip />}
                         cursor={{ strokeDasharray: '3 3', stroke: '#3b82f6', opacity: 0.2 }}
                         isAnimationActive={false} // Improves responsiveness
                     />
